@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xxd)",
+      "Bash(mv \"./ kbo_yearly_counting.csv\" \"./kbo_yearly_counting.csv\")",
+      "Bash(mkdir -p ../processed)",
+      "Bash(python3 data/process_raw.py)",
+      "Bash(python3 *)",
+      "Bash(python scouting_tool/scout.py \"Hyun Min Ahn\")",
+      "Bash(python scouting_tool/scout.py \"Do Yeong Kim\")",
+      "Bash(python scouting_tool/scout.py \"nobody here\")",
+      "Bash(pip show *)",
+      "Bash(python -c \"from pybaseball import batting_stats; help\\(batting_stats\\)\")",
+      "Bash(python -c ' *)",
+      "Bash(curl -s -w '\\\\nHTTP_STATUS:%{http_code}' -H 'User-Agent: Mozilla/5.0 \\(Macintosh; Intel Mac OS X 10_15_7\\) AppleWebKit/537.36' -H 'Accept: application/json' 'https://www.fangraphs.com/api/leaders/major-league/data?pos=all&stats=bat&lg=all&qual=1&season=2015&season1=2015&ind=1&pageitems=5&pagenum=1')",
+      "Bash(curl -sv \"https://www.fangraphs.com/api/leaders/major-league/data?pos=all&stats=bat&lg=all&qual=1&season=2023&season1=2023&ind=1&pageitems=5&pagenum=1\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://www.fangraphs.com/api/leaders/major-league/data?pos=all&stats=bat&lg=all&qual=1&season=2023&season1=2023&ind=1&pageitems=5&pagenum=1\" -H \"User-Agent: Mozilla/5.0\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://baseballsavant.mlb.com/leaderboard/custom?year=2023&type=batter&filter=&min=q&selections=pa&chart=false&x=pa&y=pa&r=no&chartType=beeswarm\" -H \"User-Agent: Mozilla/5.0\")",
+      "Bash(curl -s \"https://baseballsavant.mlb.com/leaderboard/custom?year=2023&type=batter&filter=&min=100&selections=pa%2Cwoba%2Cxwoba%2Cwhiff_percent%2Ck_percent%2Cbb_percent%2Cbatting_avg&chart=false&csv=true\" -H \"User-Agent: Mozilla/5.0\")",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "Bash(python data/crossover/pull_mlb_outcomes.py)",
+      "Read(//Users/jackmartin/Downloads/**)",
+      "Bash(python -)",
+      "Bash(cp ~/Desktop/kbo-mlb-projector/scouting_tool/scout.py /tmp/scout_backup.py)",
+      "Read(//tmp/**)",
+      "Bash(python scouting_tool/scout.py \"Seong-yoon Kim\")",
+      "Bash(python scouting_tool/scout.py \"Ju Won Kim\")",
+      "Bash(python scouting_tool/scout.py \"Si-hwan Roh\")",
+      "Bash(python scouting_tool/scout.py \"Bo-gyeong Moon\")",
+      "Bash(python model/projection_score.py)",
+      "Bash(python scouting_tool/scout.py \"Ahn\")"
+    ]
+  }
+}
