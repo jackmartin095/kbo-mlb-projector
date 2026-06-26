@@ -199,6 +199,50 @@ DISPLAY_COLS = [
     "player_type",
 ]
 
+RANKINGS_CSV = PROCESSED_DIR / "kbo_rankings_final.csv"
+RANKINGS_MD = PROCESSED_DIR / "kbo_rankings_final.md"
+
+RANKING_COLS = ["Rank", "Name", "Team", "seasons_used", "PA", "Age",
+                "wRC+", "BB%", "K%", "ISO", "Spd",
+                "adjusted_composite", "Percentile"]
+
+
+def build_rankings(df: pd.DataFrame, pool_size: int) -> pd.DataFrame:
+    out = df[["Name", "Team", "seasons_used", "PA", "Age",
+              "wRC+", "BB%", "K%", "ISO", "Spd",
+              "adjusted_composite"]].copy()
+    out.insert(0, "Rank", range(1, len(out) + 1))
+    out["Percentile"] = out["adjusted_composite"].apply(
+        lambda v: (df["adjusted_composite"] < v).sum() / pool_size * 100
+    )
+    return out
+
+
+def to_markdown(df: pd.DataFrame) -> str:
+    lines = []
+    headers = ["Rank", "Name", "Team", "Seasons", "PA", "Age",
+               "wRC+", "BB%", "K%", "ISO", "Spd", "Adj Score", "Pctile"]
+    lines.append("| " + " | ".join(headers) + " |")
+    lines.append("|" + "|".join(["---:" if i != 1 and i != 2 and i != 3 else "---" for i in range(len(headers))]) + "|")
+    for _, r in df.iterrows():
+        row = [
+            f"{int(r['Rank'])}",
+            r["Name"],
+            r["Team"].replace(" (KBO)", ""),
+            r["seasons_used"],
+            f"{int(r['PA'])}",
+            f"{int(r['Age'])}",
+            f"{r['wRC+']:.1f}",
+            f"{r['BB%']:.1%}",
+            f"{r['K%']:.1%}",
+            f"{r['ISO']:.3f}",
+            f"{r['Spd']:.1f}",
+            f"{r['adjusted_composite']:+.3f}",
+            f"{r['Percentile']:.1f}",
+        ]
+        lines.append("| " + " | ".join(row) + " |")
+    return "\n".join(lines)
+
 
 def main() -> None:
     master = pd.read_csv(MASTER_FILE)
@@ -220,14 +264,11 @@ def main() -> None:
     pool = pool.sort_values("adjusted_composite", ascending=False).reset_index(drop=True)
 
     pool_filtered = remove_foreign(pool)
-    top15 = pool_filtered.head(15).reset_index(drop=True)
+    pool_size = len(pool_filtered)
 
-    top15_out = top15[[
-        "Name", "Team", "seasons_used", "PA", "Age",
-        "wRC+", "BB%", "K%", "ISO", "Spd",
-        "adjusted_composite",
-    ]].copy()
-    top15_out.insert(0, "Rank", range(1, len(top15_out) + 1))
+    # Build full ranked pool and top 15
+    full_rankings = build_rankings(pool_filtered.reset_index(drop=True), pool_size)
+    top15 = full_rankings.head(15).copy()
 
     # --- Floor benchmark from MLB outcomes ---
     outcomes = pd.read_csv(MLB_OUTCOMES_FILE)
@@ -242,15 +283,30 @@ def main() -> None:
 
     pool_cols = [c for c in DISPLAY_COLS if c in pool.columns] + ["seasons_used"]
     pool[pool_cols].to_csv(SCOUTING_POOL_OUTPUT, index=False)
-    top15_out.to_csv(SCOUTING_POOL_FILTERED_OUTPUT, index=False)
+    top15.to_csv(SCOUTING_POOL_FILTERED_OUTPUT, index=False)
+
+    full_rankings.to_csv(RANKINGS_CSV, index=False)
+
+    md_content = (
+        f"# KBO-Only Scouting Rankings (2023-2026)\n\n"
+        f"PA-weighted career aggregate | K={REGRESSION_K} shrinkage | Age ≤ {MAX_AGE}\n\n"
+        f"Qualifying pool: {pool_size} players | Min {MIN_CAREER_PA} career PA\n\n"
+        f"**Floor benchmark (MLB→KBO avg):** wRC+ {floor_stats['wRC+']:.1f} | "
+        f"BB% {floor_stats['BB%']:.1%} | K% {floor_stats['K%']:.1%} | "
+        f"ISO {floor_stats['ISO']:.3f} | Spd {floor_stats['Spd']:.1f}\n\n"
+        f"## Top 15\n\n{to_markdown(top15)}\n\n"
+        f"## Full Qualifying Pool ({pool_size} players)\n\n{to_markdown(full_rankings)}\n"
+    )
+    RANKINGS_MD.write_text(md_content)
 
     # --- Print results ---
     print(f"Wrote {TO_MLB_OUTPUT} -> shape {to_mlb.shape}")
     print(f"Wrote {SCOUTING_POOL_OUTPUT} -> shape {pool.shape}")
-    print(f"Wrote {SCOUTING_POOL_FILTERED_OUTPUT} -> shape {top15_out.shape}")
+    print(f"Wrote {RANKINGS_CSV} -> {len(full_rankings)} players")
+    print(f"Wrote {RANKINGS_MD}")
 
     print(f"\nQualifying KBO_only pool size: {len(pool)} players")
-    print(f"After foreign-player filter:   {len(pool_filtered)} players\n")
+    print(f"After foreign-player filter:   {pool_size} players\n")
 
     print("=== KBO_to_MLB projection ranking (final KBO season) ===")
     print(to_mlb[["Name", "Season", "Team", "wRC+", "BB%", "K%", "ISO", "Spd", "composite_score"]].to_string(index=False))
@@ -260,7 +316,7 @@ def main() -> None:
           f"K% {floor_stats['K%']:.1%}  |  ISO {floor_stats['ISO']:.3f}  |  Spd {floor_stats['Spd']:.1f}")
 
     print(f"\n=== Top 15 KBO_only (career-aggregate, 200+ PA, age ≤ {MAX_AGE}) ===")
-    print(top15_out.to_string(index=False))
+    print(top15.to_string(index=False))
 
 
 if __name__ == "__main__":
