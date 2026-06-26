@@ -16,7 +16,7 @@ SCOUTING_POOL = PROCESSED_DIR / "kbo_only_scouting_pool.csv"
 KBO_TO_MLB = PROCESSED_DIR / "kbo_to_mlb_projection.csv"
 MLB_OUTCOMES = CROSSOVER_DIR / "mlb_outcomes.csv"
 
-Z_COLS = ["z_wRC+", "z_bb_pct", "z_k_pct", "z_iso", "z_Spd"]
+Z_COLS = ["z_wRC+", "z_BB%", "z_K%", "z_ISO", "z_Spd"]
 
 
 def find_player(df: pd.DataFrame, query: str) -> pd.Series | None:
@@ -93,15 +93,17 @@ def print_report(
     print(sep)
 
     # --- Stat line ---
+    seasons_used = player.get("seasons_used", f"{int(player['Season'])} only")
     print(f"\n  Season: {int(player['Season'])}  |  Team: {player['Team']}  |  Age: {int(player['Age'])}")
+    print(f"  Profile: career-aggregate  |  Seasons: {seasons_used}")
     print(f"\n  {'Metric':<12} {'Raw':>8}  {'Z-Score':>8}")
     print(f"  {'-'*32}")
     stats = [
         ("PA",    f"{int(player['PA'])}",          ""),
         ("wRC+",  f"{player['wRC+']:.1f}",          f"{player['z_wRC+']:+.2f}"),
-        ("BB%",   fmt_pct(player["bb_pct"]),         f"{player['z_bb_pct']:+.2f}"),
-        ("K%",    fmt_pct(player["k_pct"]),          f"{player['z_k_pct']:+.2f}"),
-        ("ISO",   f"{player['iso']:.3f}",            f"{player['z_iso']:+.2f}"),
+        ("BB%",   fmt_pct(player["BB%"]),             f"{player['z_BB%']:+.2f}"),
+        ("K%",    fmt_pct(player["K%"]),              f"{player['z_K%']:+.2f}"),
+        ("ISO",   f"{player['ISO']:.3f}",             f"{player['z_ISO']:+.2f}"),
         ("Spd",   f"{player['Spd']:.1f}",            f"{player['z_Spd']:+.2f}"),
     ]
     for label, raw, z in stats:
@@ -158,19 +160,19 @@ def print_report(
 
     # --- Summary paragraph ---
     wrc_desc = "elite" if player["wRC+"] > 150 else "above-average" if player["wRC+"] > 110 else "below-average"
-    bb_desc = "strong" if player["z_bb_pct"] > 0.5 else "average" if player["z_bb_pct"] > -0.5 else "weak"
-    k_desc = "impressive" if player["z_k_pct"] < -0.5 else "average" if player["z_k_pct"] < 0.5 else "elevated"
-    iso_desc = "plus" if player["z_iso"] > 0.5 else "average" if player["z_iso"] > -0.5 else "below-average"
+    bb_desc = "strong" if player["z_BB%"] > 0.5 else "average" if player["z_BB%"] > -0.5 else "weak"
+    k_desc = "impressive" if player["z_K%"] < -0.5 else "average" if player["z_K%"] < 0.5 else "elevated"
+    iso_desc = "plus" if player["z_ISO"] > 0.5 else "average" if player["z_ISO"] > -0.5 else "below-average"
     spd_desc = "plus" if player["z_Spd"] > 0.5 else "average" if player["z_Spd"] > -0.5 else "below-average"
     best_comp = matches.iloc[0]
 
     print(f"\n  Summary")
     print(f"  {'-'*56}")
     summary = (
-        f"  In {int(player['Season'])}, {player['NameASCII']} posted {wrc_desc} offensive production "
-        f"(wRC+ {player['wRC+']:.0f}) with {bb_desc} plate discipline (BB% {fmt_pct(player['bb_pct'])}) "
-        f"and {k_desc} contact rates (K% {fmt_pct(player['k_pct'])}). "
-        f"He shows {iso_desc} power (ISO {player['iso']:.3f}) and {spd_desc} speed (Spd {player['Spd']:.1f}). "
+        f"  Across {seasons_used}, {player['NameASCII']} posts {wrc_desc} aggregate production "
+        f"(wRC+ {player['wRC+']:.0f}) with {bb_desc} plate discipline (BB% {fmt_pct(player['BB%'])}) "
+        f"and {k_desc} contact rates (K% {fmt_pct(player['K%'])}). "
+        f"He shows {iso_desc} power (ISO {player['ISO']:.3f}) and {spd_desc} speed (Spd {player['Spd']:.1f}). "
         f"Age-adjusted composite of {adj_score:+.3f} ({mult:.2f}x at age {int(player['Age'])}) "
         f"ranks in the {pct:.0f}th percentile of the KBO-only scouting pool. "
         f"Closest MLB-transition comp: {best_comp['NameASCII']} "
