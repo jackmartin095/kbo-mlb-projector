@@ -28,7 +28,14 @@
       "Bash(python scouting_tool/scout.py \"Si-hwan Roh\")",
       "Bash(python scouting_tool/scout.py \"Bo-gyeong Moon\")",
       "Bash(python model/projection_score.py)",
-      "Bash(python scouting_tool/scout.py \"Ahn\")"
+      "Bash(python scouting_tool/scout.py \"Ahn\")",
+      "Bash(python data/process_raw.py)",
+      "Bash(pip install *)",
+      "Bash(python -c \"import streamlit, plotly, pandas; print\\('streamlit', streamlit.__version__\\); print\\('plotly', plotly.__version__\\); print\\('pandas', pandas.__version__\\)\")",
+      "Bash(streamlit run *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8501)",
+      "Bash(lsof -ti:8502)",
+      "Bash(xargs kill -9)"
     ]
   }
 }
