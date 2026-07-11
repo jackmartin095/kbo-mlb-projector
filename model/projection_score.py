@@ -201,6 +201,7 @@ DISPLAY_COLS = [
 
 RANKINGS_CSV = PROCESSED_DIR / "kbo_rankings_final.csv"
 RANKINGS_MD = PROCESSED_DIR / "kbo_rankings_final.md"
+SCORED_POOL_CSV = PROCESSED_DIR / "kbo_scored_pool.csv"
 
 RANKING_COLS = ["Rank", "Name", "Team", "seasons_used", "PA", "Age",
                 "wRC+", "BB%", "K%", "ISO", "Spd",
@@ -210,6 +211,7 @@ RANKING_COLS = ["Rank", "Name", "Team", "seasons_used", "PA", "Age",
 def build_rankings(df: pd.DataFrame, pool_size: int) -> pd.DataFrame:
     out = df[["Name", "Team", "seasons_used", "PA", "Age",
               "wRC+", "BB%", "K%", "ISO", "Spd",
+              "z_wRC+", "z_BB%", "z_K%", "z_ISO", "z_Spd",
               "adjusted_composite"]].copy()
     out.insert(0, "Rank", range(1, len(out) + 1))
     out["Percentile"] = out["adjusted_composite"].apply(
@@ -286,6 +288,7 @@ def main() -> None:
     top15.to_csv(SCOUTING_POOL_FILTERED_OUTPUT, index=False)
 
     full_rankings.to_csv(RANKINGS_CSV, index=False)
+    full_rankings.to_csv(SCORED_POOL_CSV, index=False)
 
     md_content = (
         f"# KBO-Only Scouting Rankings (2023-2026)\n\n"
