@@ -5,6 +5,9 @@ from pathlib import Path
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
+from packaging.version import Version as _V
+
+_ST_SUPPORTS_SELECTION = _V(st.__version__) >= _V("1.35.0")
 
 DATA_FILE = Path(__file__).parent.parent / "data" / "processed" / "kbo_scored_pool.csv"
 HOT_FILE  = Path(__file__).parent.parent / "data" / "processed" / "kbo_hot_2026.csv"
@@ -152,17 +155,17 @@ if page == PAGES[1]:
         "Trajectory":  st.column_config.TextColumn("Trend",       width="small"),
     }
 
+    _df_kwargs = dict(on_select="rerun", selection_mode="single-row") if _ST_SUPPORTS_SELECTION else {}
     event = st.dataframe(
         filtered[display_cols],
         column_config=col_cfg,
         use_container_width=True,
         hide_index=True,
         height=min(50 + len(filtered) * 35, 900),
-        on_select="rerun",
-        selection_mode="single-row",
+        **_df_kwargs,
     )
 
-    selected_rows = event.selection.get("rows", []) if event and event.selection else []
+    selected_rows = (event.selection.get("rows", []) if event and hasattr(event, "selection") and event.selection else []) if _ST_SUPPORTS_SELECTION else []
     if selected_rows:
         selected_name = filtered.iloc[selected_rows[0]]["Name"]
         st.session_state["selected_player"] = selected_name
@@ -516,17 +519,17 @@ elif page == PAGES[3]:
 
     st.subheader(f"Hot Right Now — {len(filtered_hot)} players")
 
+    _hot_kwargs = dict(on_select="rerun", selection_mode="single-row") if _ST_SUPPORTS_SELECTION else {}
     hot_event = st.dataframe(
         filtered_hot[hot_display_cols],
         column_config=hot_col_cfg,
         use_container_width=True,
         hide_index=True,
         height=min(50 + len(filtered_hot) * 35, 900),
-        on_select="rerun",
-        selection_mode="single-row",
+        **_hot_kwargs,
     )
 
-    hot_selected_rows = hot_event.selection.get("rows", []) if hot_event and hot_event.selection else []
+    hot_selected_rows = (hot_event.selection.get("rows", []) if hot_event and hasattr(hot_event, "selection") and hot_event.selection else []) if _ST_SUPPORTS_SELECTION else []
     if hot_selected_rows:
         hot_selected_name = filtered_hot.iloc[hot_selected_rows[0]]["Name"]
         # Try to find this player in the multi-year board
