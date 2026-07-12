@@ -88,8 +88,7 @@ mlb_benchmarks = load_mlb_outcomes()
 if page == PAGES[1]:
     st.title("⚾ KBO→MLB Projection Board")
     st.caption(
-        "PA-weighted career aggregate (2023–2026) · K=300 Marcel shrinkage · Age ≤ 29 · "
-        f"{len(df)} qualifying players"
+        f"PA-weighted career aggregate (2023–2026) · K=300 Marcel shrinkage · Age ≤ 29 · {len(df)} qualifying players"
     )
     st.divider()
 
@@ -203,6 +202,9 @@ elif page == PAGES[2]:
         st.session_state["selected_player"] = chosen
 
     player = df[df["Name"] == chosen].iloc[0]
+
+    # --- Player name ---
+    st.subheader(chosen)
 
     # --- Header ---
     rank_val = int(player["Rank"])
@@ -450,10 +452,11 @@ elif page == PAGES[2]:
 
 elif page == PAGES[3]:
     st.title("🔥 Hot Right Now — 2026 In-Season Form")
-    st.info(
-        "**This page reflects 2026 in-season performance only** — not the multi-year projection ranking. "
-        "Players are scored on their 2026 stats alone (z-scored against the 2026 qualifying pool), "
-        "with no recency weighting and no age multiplier. "
+    st.markdown(
+        "Who is performing best in the KBO right now, regardless of career history. "
+        "Players are scored on their 2026 stats only — no multi-year aggregation, no age multiplier — "
+        "making this a pure snapshot of current-season form. A player who ranks low on the main board "
+        "but appears here is someone whose recent production has outrun their track record. "
         "Minimum 100 PA in 2026 · Age ≤ 29 · Domestic players only."
     )
     st.caption(f"{len(hot_df)} players qualify · 2026 season through latest data pull")
