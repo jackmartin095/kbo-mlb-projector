@@ -62,10 +62,10 @@ def load_mlb_outcomes() -> dict:
 # Navigation
 # ---------------------------------------------------------------------------
 
-PAGES = ["📋 The Board", "🔍 Player Deep-Dive", "🔥 Hot Right Now", "📖 Methodology"]
+PAGES = ["📖 Methodology", "📋 The Board", "🔍 Player Deep-Dive", "🔥 Hot Right Now"]
 
 if "page" not in st.session_state:
-    st.session_state["page"] = PAGES[0]
+    st.session_state["page"] = PAGES[0]  # Methodology is index 0 = landing page
 if "selected_player" not in st.session_state:
     st.session_state["selected_player"] = None
 
@@ -85,7 +85,7 @@ mlb_benchmarks = load_mlb_outcomes()
 # Page 1 — The Board
 # ---------------------------------------------------------------------------
 
-if page == PAGES[0]:
+if page == PAGES[1]:
     st.title("⚾ KBO→MLB Projection Board")
     st.caption(
         "PA-weighted career aggregate (2023–2026) · K=300 Marcel shrinkage · Age ≤ 29 · "
@@ -161,7 +161,7 @@ if page == PAGES[0]:
         selected_name = filtered.iloc[selected_rows[0]]["Name"]
         st.session_state["selected_player"] = selected_name
         if st.button(f"Open **{selected_name}** in Deep-Dive →"):
-            st.session_state["page"] = PAGES[1]
+            st.session_state["page"] = PAGES[2]
             st.rerun()
 
     st.caption(
@@ -174,7 +174,7 @@ if page == PAGES[0]:
 # Page 2 — Player Deep-Dive
 # ---------------------------------------------------------------------------
 
-elif page == PAGES[1]:
+elif page == PAGES[2]:
     st.title("🔍 Player Deep-Dive")
     st.divider()
 
@@ -448,7 +448,7 @@ elif page == PAGES[1]:
 # Page 3 — Hot Right Now
 # ---------------------------------------------------------------------------
 
-elif page == PAGES[2]:
+elif page == PAGES[3]:
     st.title("🔥 Hot Right Now — 2026 In-Season Form")
     st.info(
         "**This page reflects 2026 in-season performance only** — not the multi-year projection ranking. "
@@ -529,7 +529,7 @@ elif page == PAGES[2]:
             )
         if st.button(f"Open **{hot_selected_name}** in Deep-Dive →"):
             st.session_state["selected_player"] = hot_selected_name
-            st.session_state["page"] = PAGES[1]
+            st.session_state["page"] = PAGES[2]
             st.rerun()
 
     st.divider()
@@ -543,7 +543,7 @@ elif page == PAGES[2]:
 # Page 4 — Methodology
 # ---------------------------------------------------------------------------
 
-elif page == PAGES[3]:
+elif page == PAGES[0]:
     st.title("📖 Methodology")
     st.caption("How the KBO→MLB Projection Model works")
     st.divider()
@@ -584,6 +584,22 @@ appearances it represents. This closely mirrors how FanGraphs calculates multi-y
 aggregate leaderboards, and avoids over-weighting small partial seasons.
 
 **Qualifying filters:** 200+ combined career PA · most recent season age ≤ 29
+
+#### Design note — why recency isn't in the composite
+
+The career aggregate deliberately treats all seasons equally on a per-plate-appearance
+basis rather than weighting recent seasons more heavily. This is a design choice, not
+an oversight. Blending recency into the composite would produce a single number that
+mixes two different signals — how good a player has been, and how good he is becoming —
+making it harder to tell which is driving a ranking.
+
+Instead, the model separates them. The main board answers "who has been reliably good,"
+using the full career sample. The Trend column answers "who is improving," by comparing
+recent performance against a player's own prior baseline. The Hot Right Now page answers
+"who is performing best today," using 2026 data alone. Each view is legible on its own,
+and a player who ranks low on the board but high on Trend or Hot is itself a meaningful
+scouting signal: current form has outrun the track record, and the question becomes
+whether it holds.
 
 ---
 
