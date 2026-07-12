@@ -217,7 +217,11 @@ elif page == PAGES[2]:
         chosen = label_to_name.get(chosen_label, player_labels[0])
         st.session_state["selected_player"] = chosen
 
-    player = df[df["Name"] == chosen].iloc[0]
+    player_rows = df[df["Name"] == chosen]
+    if player_rows.empty:
+        st.error(f"Player not found: '{chosen}' (label: '{chosen_label}'). Please select again.")
+        st.stop()
+    player = player_rows.iloc[0]
 
     # --- Player name ---
     st.subheader(chosen)
@@ -247,19 +251,25 @@ elif page == PAGES[2]:
     st.divider()
 
     # --- Slash line / counting stats ---
+    def _fmt_int(val):
+        return str(int(round(float(val)))) if pd.notna(val) else "—"
+
+    def _fmt_float(val, fmt=".3f"):
+        return format(float(val), fmt) if pd.notna(val) else "—"
+
     sl1, sl2, sl3, sl4, sl5, sl6, sl7, sl8 = st.columns(8)
-    sl1.metric("AVG",  f"{float(player['AVG']):.3f}")
-    sl2.metric("OBP",  f"{float(player['OBP']):.3f}")
-    sl3.metric("SLG",  f"{float(player['SLG']):.3f}")
-    sl4.metric("OPS",  f"{float(player['OPS']):.3f}")
-    sl5.metric("HR",   f"{int(player['HR'])}")
-    sl6.metric("SB",   f"{int(player['SB'])}")
-    sl7.metric("RBI",  f"{int(player['RBI'])}")
-    sl8.metric("R",    f"{int(player['R'])}")
+    sl1.metric("AVG",  _fmt_float(player.get("AVG")))
+    sl2.metric("OBP",  _fmt_float(player.get("OBP")))
+    sl3.metric("SLG",  _fmt_float(player.get("SLG")))
+    sl4.metric("OPS",  _fmt_float(player.get("OPS")))
+    sl5.metric("HR",   _fmt_int(player.get("HR")))
+    sl6.metric("SB",   _fmt_int(player.get("SB")))
+    sl7.metric("RBI",  _fmt_int(player.get("RBI")))
+    sl8.metric("R",    _fmt_int(player.get("R")))
 
     with st.expander("Full counting stats", expanded=False):
         count_cols = ["G", "AB", "H", "2B", "3B", "HR", "R", "RBI", "BB", "SO", "SB", "CS", "HBP"]
-        count_data = {col: int(player[col]) for col in count_cols if col in player.index}
+        count_data = {col: _fmt_int(player.get(col)) for col in count_cols if col in player.index}
         count_df = pd.DataFrame([count_data])
         st.dataframe(count_df, hide_index=True, use_container_width=False)
         st.caption(f"Counting totals across {player['Seasons']}")
