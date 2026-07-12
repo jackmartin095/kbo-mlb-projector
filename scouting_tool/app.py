@@ -87,6 +87,13 @@ mlb_benchmarks = load_mlb_outcomes()
 
 if page == PAGES[1]:
     st.title("⚾ KBO→MLB Projection Board")
+    st.markdown(
+        "A ranked pool of KBO hitters most likely to succeed if posted to MLB. "
+        "Each player's score is built from a PA-weighted career aggregate across 2023–2026, "
+        "shrunk toward the pool mean for reliability, and adjusted upward for younger players "
+        "with more development runway. Use the sidebar to filter by team, PA minimum, or age. "
+        "Click a row and use **Open in Deep-Dive →** to view a full player profile."
+    )
     st.caption(
         f"PA-weighted career aggregate (2023–2026) · K=300 Marcel shrinkage · Age ≤ 29 · {len(df)} qualifying players"
     )
@@ -175,6 +182,12 @@ if page == PAGES[1]:
 
 elif page == PAGES[2]:
     st.title("🔍 Player Deep-Dive")
+    st.markdown(
+        "Full scouting profile for any player in the qualifying pool. Select a player from "
+        "the sidebar dropdown to see their career aggregate stat line, z-score radar chart "
+        "showing their statistical shape against the pool average, trend and trajectory, "
+        "and how their numbers compare to the KBO→MLB ceiling and MLB→KBO floor benchmarks."
+    )
     st.divider()
 
     # Build dropdown labels: "Name — Team · #Rank"
