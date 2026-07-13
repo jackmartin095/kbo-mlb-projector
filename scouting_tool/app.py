@@ -33,7 +33,8 @@ def load_data() -> pd.DataFrame:
     df["Spd"] = df["Spd"].round(1)
     df["wRC+"] = df["wRC+"].round(1)
     df["Adj Score"] = df["adjusted_composite"].round(3)
-    df["Pctile"] = df["Percentile"].round(1)
+    df["Percentile"] = df["Percentile"].round(1)
+    df["Trend"] = df["Trend"].round(3)
     df = df.rename(columns={"seasons_used": "Seasons", "PA": "Combined PA"})
     return df
 
@@ -95,7 +96,10 @@ if page == PAGES[1]:
         "Each player's score is built from a PA-weighted career aggregate across 2023–2026, "
         "shrunk toward the pool mean for reliability, and adjusted upward for younger players "
         "with more development runway. Use the sidebar to filter by team, PA minimum, or age. "
-        "Click a row and use **Open in Deep-Dive →** to view a full player profile."
+        "Click a row and use **Open in Deep-Dive →** to view a full player profile. "
+        "Note: the composite weights plate discipline and contact heavily, so contact-first "
+        "profiles with limited power can rank well. Check the ISO column and the deep-dive "
+        "radar for a player's full shape."
     )
     st.caption(
         f"PA-weighted career aggregate (2023–2026) · K=300 Marcel shrinkage · Age ≤ 29 · {len(df)} qualifying players"
@@ -126,33 +130,37 @@ if page == PAGES[1]:
     filtered["Rank"] = range(1, len(filtered) + 1)
 
     display_cols = ["Rank", "Name", "Team", "Age", "Seasons", "Combined PA",
-                    "wRC+", "BB%", "K%", "ISO", "Spd", "Adj Score", "Pctile",
-                    "Trajectory"]
+                    "wRC+", "BB%", "K%", "ISO", "Spd", "Adj Score", "Percentile",
+                    "Trend", "Trajectory"]
 
     st.subheader(f"Full Qualifying Pool — {len(filtered)} players")
     st.caption("Click a row then use **Open in Deep-Dive →** to view the player profile.")
 
+    _score_max = float(df["Adj Score"].max())
+    _score_min = float(df["Adj Score"].min())
+
     col_cfg = {
-        "Rank":        st.column_config.NumberColumn("Rank",      width="small"),
-        "Name":        st.column_config.TextColumn("Name",        width="medium"),
-        "Team":        st.column_config.TextColumn("Team",        width="small"),
-        "Age":         st.column_config.NumberColumn("Age",       width="small"),
-        "Seasons":     st.column_config.TextColumn("Seasons",     width="small"),
-        "Combined PA": st.column_config.NumberColumn("PA",        width="small"),
-        "wRC+":        st.column_config.NumberColumn("wRC+",      format="%.1f", width="small"),
-        "BB%":         st.column_config.NumberColumn("BB%",       format="%.1f%%", width="small"),
-        "K%":          st.column_config.NumberColumn("K%",        format="%.1f%%", width="small"),
-        "ISO":         st.column_config.NumberColumn("ISO",       format="%.3f", width="small"),
-        "Spd":         st.column_config.NumberColumn("Spd",       format="%.1f", width="small"),
+        "Rank":        st.column_config.NumberColumn("Rank",       width="small"),
+        "Name":        st.column_config.TextColumn("Name",         width="medium"),
+        "Team":        st.column_config.TextColumn("Team",         width="small"),
+        "Age":         st.column_config.NumberColumn("Age",        width="small"),
+        "Seasons":     st.column_config.TextColumn("Seasons",      width="small"),
+        "Combined PA": st.column_config.NumberColumn("PA",         width="small"),
+        "wRC+":        st.column_config.NumberColumn("wRC+",       format="%.1f",  width="small"),
+        "BB%":         st.column_config.NumberColumn("BB%",        format="%.1f%%", width="small"),
+        "K%":          st.column_config.NumberColumn("K%",         format="%.1f%%", width="small"),
+        "ISO":         st.column_config.NumberColumn("ISO",        format="%.3f",  width="small"),
+        "Spd":         st.column_config.NumberColumn("Spd",        format="%.1f",  width="small"),
         "Adj Score":   st.column_config.ProgressColumn(
             "Adj Score",
             format="%.3f",
-            min_value=float(df["Adj Score"].min()),
-            max_value=float(df["Adj Score"].max()),
+            min_value=_score_min,
+            max_value=_score_max,
             width="medium",
         ),
-        "Pctile":      st.column_config.NumberColumn("Pctile",    format="%.1f", width="small"),
-        "Trajectory":  st.column_config.TextColumn("Trend",       width="small"),
+        "Percentile":  st.column_config.NumberColumn("Percentile", format="%.1f",  width="small"),
+        "Trend":       st.column_config.NumberColumn("Trend",      format="%+.3f", width="small"),
+        "Trajectory":  st.column_config.TextColumn("Trajectory",   width="small"),
     }
 
     _df_kwargs = dict(on_select="rerun", selection_mode="single-row") if _ST_SUPPORTS_SELECTION else {}
@@ -174,8 +182,8 @@ if page == PAGES[1]:
             st.rerun()
 
     st.caption(
-        "**Adj Score** = composite z-score across wRC+ (30%), BB% (25%), K% inverted (20%), "
-        "ISO (15%), Spd (10%) · shrunk toward pool mean by PA · multiplied by age factor"
+        "**Adj Score** = composite z-score across wRC+ (30%), BB% (25%), ISO (20%), "
+        "K% inverted (15%), Spd (10%) · shrunk toward pool mean by PA · multiplied by age factor"
     )
 
 
@@ -326,7 +334,12 @@ elif page == PAGES[2]:
                 f"**{trajectory}** &nbsp; <span style='color:{color};font-size:1.2em'>{trend_str}</span>",
                 unsafe_allow_html=True,
             )
-            st.caption("Trend = most recent season composite minus prior seasons' recency-weighted composite")
+            st.caption(
+                "Trend = most recent season's composite z-score minus prior seasons' recency-weighted composite. "
+                "Positive = most recent season was better than prior baseline; negative = recent season was weaker. "
+                "Labels are relative: → Stable means the trend is near the median for the pool, "
+                "not that performance is flat in absolute terms."
+            )
         else:
             st.markdown("**N/A** — single-season player, no trend data")
 
@@ -415,19 +428,19 @@ elif page == PAGES[2]:
     # --- Score positioning vs MLB benchmarks ---
     st.subheader("Score Positioning vs MLB Benchmarks")
 
-    adj = float(player["Adj Score"])
     floor_data = mlb_benchmarks.get("MLB_to_KBO")
     ceiling_data = mlb_benchmarks.get("KBO_to_MLB")
+    player_wrc = float(player["wRC+"])
 
     bm_cols = st.columns(3)
     with bm_cols[0]:
-        st.metric("This Player", f"{adj:+.3f}")
+        st.metric("This Player — wRC+", f"{player_wrc:.1f}")
     with bm_cols[1]:
         if ceiling_data is not None:
-            st.metric("KBO→MLB Ceiling Avg (wRC+)", f"{ceiling_data['wRC+']:.0f}")
+            st.metric("KBO→MLB Ceiling Avg — wRC+", f"{ceiling_data['wRC+']:.1f}")
     with bm_cols[2]:
         if floor_data is not None:
-            st.metric("MLB→KBO Floor Avg (wRC+)", f"{floor_data['wRC+']:.0f}")
+            st.metric("MLB→KBO Floor Avg — wRC+", f"{floor_data['wRC+']:.1f}")
 
     if floor_data is not None and ceiling_data is not None:
         st.markdown("**Floor & Ceiling Stat Comparison**")
@@ -496,19 +509,43 @@ elif page == PAGES[3]:
         hot_min_pa = st.slider("Min 2026 PA", 100, 500, 100, step=25)
         hot_max_age = st.slider("Max Age", 20, 29, 29)
 
+    # Build board rank lookup for Gap column
+    board_rank_map = dict(zip(df["Name"], df["Rank"].astype(int)))
+
     filtered_hot = hot_df.copy()
     if hot_selected_teams:
         filtered_hot = filtered_hot[filtered_hot["Team"].isin(hot_selected_teams)]
     filtered_hot = filtered_hot[filtered_hot["PA"] >= hot_min_pa]
     filtered_hot = filtered_hot[filtered_hot["Age"] <= hot_max_age]
     filtered_hot = filtered_hot.sort_values("Score", ascending=False).reset_index(drop=True)
-    filtered_hot["Rank"] = range(1, len(filtered_hot) + 1)
+    filtered_hot["Hot Rank"] = range(1, len(filtered_hot) + 1)
+    filtered_hot["Board Rank"] = filtered_hot["Name"].map(board_rank_map)
+    # Gap = Board Rank minus Hot Rank; large positive = performing well above career track record
+    filtered_hot["Gap"] = filtered_hot.apply(
+        lambda r: int(r["Board Rank"] - r["Hot Rank"]) if pd.notna(r["Board Rank"]) else None,
+        axis=1,
+    )
+    # Visual indicator for large gaps
+    def _gap_label(gap):
+        if gap is None or pd.isna(gap):
+            return "—"
+        if gap >= 20:
+            return f"▲▲ +{gap}"
+        if gap >= 8:
+            return f"▲ +{gap}"
+        if gap <= -8:
+            return f"▼ {gap}"
+        return f"+{gap}" if gap > 0 else str(gap)
+    filtered_hot["Gap"] = filtered_hot["Gap"].apply(_gap_label)
+    filtered_hot["Board Rank"] = filtered_hot["Board Rank"].apply(
+        lambda v: int(v) if pd.notna(v) else None
+    )
 
-    hot_display_cols = ["Rank", "Name", "Team", "Age", "PA",
-                        "wRC+", "BB%", "K%", "ISO", "Spd", "Score"]
+    hot_display_cols = ["Hot Rank", "Name", "Team", "Age", "PA",
+                        "wRC+", "BB%", "K%", "ISO", "Spd", "Score", "Board Rank", "Gap"]
 
     hot_col_cfg = {
-        "Rank":  st.column_config.NumberColumn("Rank",  width="small"),
+        "Hot Rank": st.column_config.NumberColumn("Hot Rank", width="small"),
         "Name":  st.column_config.TextColumn("Name",    width="medium"),
         "Team":  st.column_config.TextColumn("Team",    width="small"),
         "Age":   st.column_config.NumberColumn("Age",   width="small"),
@@ -518,16 +555,23 @@ elif page == PAGES[3]:
         "K%":    st.column_config.NumberColumn("K%",    format="%.1f%%", width="small"),
         "ISO":   st.column_config.NumberColumn("ISO",   format="%.3f", width="small"),
         "Spd":   st.column_config.NumberColumn("Spd",   format="%.1f", width="small"),
-        "Score": st.column_config.ProgressColumn(
+        "Score":      st.column_config.ProgressColumn(
             "2026 Score",
             format="%.3f",
             min_value=float(hot_df["Score"].min()),
             max_value=float(hot_df["Score"].max()),
             width="medium",
         ),
+        "Board Rank": st.column_config.NumberColumn("Board Rank", width="small"),
+        "Gap":        st.column_config.TextColumn(
+            "Gap ↑",
+            help="Board Rank minus Hot Rank. Large positive (▲▲) = performing well above career track record.",
+            width="small",
+        ),
     }
 
     st.subheader(f"Hot Right Now — {len(filtered_hot)} players")
+    st.caption("**Gap** = Board Rank minus Hot Rank. ▲▲ = performing far above career projection; ▼ = cooling off relative to track record.")
 
     _hot_kwargs = dict(on_select="rerun", selection_mode="single-row") if _ST_SUPPORTS_SELECTION else {}
     hot_event = st.dataframe(
@@ -563,8 +607,8 @@ elif page == PAGES[3]:
 
     st.divider()
     st.caption(
-        "**2026 Score** = composite z-score across wRC+ (30%), BB% (25%), K% inverted (20%), "
-        "ISO (15%), Spd (10%) · z-scored against 2026 qualifying pool only · no age factor applied"
+        "**2026 Score** = composite z-score across wRC+ (30%), BB% (25%), ISO (20%), "
+        "K% inverted (15%), Spd (10%) · z-scored against 2026 qualifying pool only · no age factor applied"
     )
 
 
@@ -578,6 +622,12 @@ elif page == PAGES[0]:
     st.divider()
 
     st.markdown("""
+A statistical scouting tool for identifying KBO hitters most likely to succeed in MLB.
+Built on four years of FanGraphs data, validated against the players who actually made
+the jump. Start with the Board for rankings, or read on for how the model works.
+
+---
+
 ### Overview
 
 This model identifies KBO players most likely to succeed if posted to MLB, using
@@ -662,9 +712,17 @@ Five metrics are combined into a **composite score** using fixed weights:
 |--------|--------|-----------|
 | wRC+   | 30%    | Higher = better |
 | BB%    | 25%    | Higher = better |
-| K%     | 20%    | **Lower = better** (inverted) |
-| ISO    | 15%    | Higher = better |
+| ISO    | 20%    | Higher = better |
+| K%     | 15%    | **Lower = better** (inverted) |
 | Spd    | 10%    | Higher = better |
+
+**Why ISO is weighted at 20%:** MLB pitchers attack hitters who pose no extra-base threat,
+so power functions as something closer to a gating requirement than a bonus at the major
+league level. A contact-first KBO profile with minimal ISO carries more translation risk
+than its KBO production suggests. The weighting reflects that prior. (Note: within the
+small crossover sample used for the ceiling and floor benchmarks, ISO did not cleanly
+separate successful transitions from washouts — the weighting is based on reasoning about
+MLB pitching environments rather than on that limited evidence.)
 
 ---
 

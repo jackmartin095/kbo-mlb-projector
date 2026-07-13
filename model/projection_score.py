@@ -28,8 +28,8 @@ MAX_AGE = 29
 METRICS = {
     "wRC+": (0.30, False),
     "BB%":  (0.25, False),
-    "K%":   (0.20, True),
-    "ISO":  (0.15, False),
+    "ISO":  (0.20, False),
+    "K%":   (0.15, True),
     "Spd":  (0.10, False),
 }
 
