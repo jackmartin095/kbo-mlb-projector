@@ -163,16 +163,9 @@ if page == PAGES[1]:
         "Trajectory":  st.column_config.TextColumn("Trajectory",   width="small"),
     }
 
-    board_styled = filtered[display_cols].style.background_gradient(
-        subset=["Adj Score"],
-        cmap="YlOrRd",
-        vmin=_score_min,
-        vmax=_score_max,
-    )
-
     _df_kwargs = dict(on_select="rerun", selection_mode="single-row") if _ST_SUPPORTS_SELECTION else {}
     event = st.dataframe(
-        board_styled,
+        filtered[display_cols],
         column_config=col_cfg,
         use_container_width=True,
         hide_index=True,
