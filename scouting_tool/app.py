@@ -152,27 +152,21 @@ if page == PAGES[1]:
         "ISO":         st.column_config.NumberColumn("ISO",        format="%.3f",  width="small"),
         "Spd":         st.column_config.NumberColumn("Spd",        format="%.1f",  width="small"),
         "Adj Score":   st.column_config.NumberColumn("Adj Score",  format="%.3f",  width="small"),
-        "Score Bar":   st.column_config.TextColumn("▐ Score",      width="medium"),
         "Percentile":  st.column_config.NumberColumn("Percentile", format="%.1f",  width="small"),
         "Trend":       st.column_config.NumberColumn("Trend",      format="%+.3f", width="small"),
         "Trajectory":  st.column_config.TextColumn("Trajectory",   width="small"),
     }
 
-    # Build a Unicode block bar that darkens with score — 10 steps from ░ to █
-    _blocks = " ░░▒▒▓▓███"
-    def _score_bar(score):
-        t = (score - _score_min) / (_score_max - _score_min) if _score_max > _score_min else 0
-        filled = max(1, round(t * 10))
-        return "█" * filled + "▒" * (1 if filled < 10 else 0) + "░" * max(0, 9 - filled)
-
-    filtered = filtered.copy()
-    filtered["Score Bar"] = filtered["Adj Score"].apply(_score_bar)
-
-    _board_display_cols = display_cols[:display_cols.index("Adj Score") + 1] + ["Score Bar"] + display_cols[display_cols.index("Adj Score") + 1:]
+    board_styled = filtered[display_cols].style.background_gradient(
+        subset=["Adj Score"],
+        cmap="YlOrRd",
+        vmin=_score_min,
+        vmax=_score_max,
+    )
 
     _df_kwargs = dict(on_select="rerun", selection_mode="single-row") if _ST_SUPPORTS_SELECTION else {}
     event = st.dataframe(
-        filtered[_board_display_cols],
+        board_styled,
         column_config=col_cfg,
         use_container_width=True,
         hide_index=True,
