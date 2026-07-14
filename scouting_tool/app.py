@@ -122,6 +122,7 @@ if page == PAGES[1]:
         sort_asc = st.checkbox("Ascending", value=False)
 
     filtered = df.copy()
+    filtered = filtered[~filtered["Seasons"].isin(["2023 only", "2024 only"])]
     if selected_teams:
         filtered = filtered[filtered["Team"].isin(selected_teams)]
     filtered = filtered[filtered["Combined PA"] >= min_pa]
