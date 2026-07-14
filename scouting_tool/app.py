@@ -56,10 +56,17 @@ def load_hot() -> pd.DataFrame:
 def load_mlb_outcomes() -> dict:
     outcomes = pd.read_csv(MLB_OUTCOMES_FILE)
     stat_cols = ["wRC+", "BB%", "K%", "ISO", "Spd"]
-    return {
-        group: gdf[stat_cols].mean()
-        for group, gdf in outcomes.groupby("group")
-    }
+    result = {}
+    for group, gdf in outcomes.groupby("group"):
+        # PA-weighted average per player first, then average across players
+        player_aggs = (
+            gdf.groupby("Name")
+            .apply(lambda d: pd.Series(
+                {s: (d[s] * d["PA"]).sum() / d["PA"].sum() for s in stat_cols}
+            ), include_groups=False)
+        )
+        result[group] = player_aggs.mean()
+    return result
 
 
 # ---------------------------------------------------------------------------
