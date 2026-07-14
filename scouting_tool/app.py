@@ -783,36 +783,60 @@ right now*, independent of career history.
 
 ---
 
-### Benchmarks
+### Benchmarks — Ceiling and Floor
 
-**Ceiling** — average MLB stats of KBO players who successfully transitioned to MLB
-(Jung Hoo Lee, Ha-seong Kim, Hyeseong Kim, et al.). Represents what the best-case
-MLB outcome looks like statistically.
-
-**Floor** — average pre-KBO MLB stats of 23 MLB veterans who moved to KBO. Represents
-a reference point for the level of MLB production associated with players who ended up
-in the KBO.
+The Player Deep-Dive page shows each player's wRC+ against two reference points drawn
+from real KBO crossover data: a ceiling (what successful KBO→MLB transitions looked like
+in MLB) and a floor (what MLB veterans who moved to KBO produced before making that move).
+Both are built using the same PA-weighted averaging method as the main model.
 
 ---
 
-### How the Floor Was Established
+#### The Ceiling
 
-The floor benchmark is the average pre-KBO MLB production of 23 MLB veterans who
-subsequently moved to play in the KBO — players like Daz Cameron, Aaron Altherr,
-Guillermo Heredia, and others. Their MLB stats were PA-weighted within each player's
-career, then averaged equally across all 23 players, giving a floor of **65.1 wRC+**.
+The ceiling is the average post-transition MLB production of 8 players who moved from
+the KBO to MLB: Shin-Soo Choo, Jung Hoo Lee, Hyun Soo Kim, Dae-Ho Lee, Hyeseong Kim,
+Byung-ho Park, Sung-Mun Song, and Jae-Gyun Hwang. Their MLB stats were PA-weighted
+within each player's career, then averaged equally across all 8 players, giving a
+ceiling of **84.0 wRC+** (BB% 8.9%, K% 22.9%, ISO .122).
+
+That number represents what a successful KBO→MLB transition has actually looked like
+in terms of MLB offensive production.
+
+**Why it matters — Jung Hoo Lee as an example:**
+Lee posted a 109.0 wRC+ across 1,036 MLB plate appearances (2024–2026), and has
+improved each season: 83 wRC+ in his first year, 107 in his second, 128 in his third.
+His KBO profile — elite contact, strong walk rate, low strikeout rate — translated
+cleanly, and the model ranked him top-3 in the backtest validation using only his
+final KBO season.
+
+**An honest caveat:**
+The sample is only 8 players, which limits precision considerably. Several transitions
+are recent enough that long-term outcomes aren't established — Sung-Mun Song has 48
+MLB plate appearances, Jae-Gyun Hwang just 57. Both are pulling the group average
+down significantly (25.8 and 54.4 wRC+ respectively). The ceiling is best read as a
+directional reference for what the KBO→MLB group has produced in MLB on average, not
+a precise prediction of what any individual player will achieve.
+
+---
+
+#### The Floor
+
+The floor is the average pre-KBO MLB production of 23 MLB veterans who subsequently
+moved to play in the KBO — players like Daz Cameron, Aaron Altherr, Guillermo Heredia,
+and others. Their MLB stats were PA-weighted within each player's career, then averaged
+equally across all 23 players, giving a floor of **65.1 wRC+**.
 
 That number represents the level of MLB production that, in practice, did not sustain
 a major league career long enough to keep a player out of the KBO.
 
 **Why it matters — Daz Cameron as an example:**
-Cameron posted a 64.9 wRC+ across 472 MLB plate appearances — close-to-average
-offense at the major league level, not enough to hold a roster spot. He then hit
-121.0 wRC+ across his KBO appearances. Elite production by KBO standards, from a
-hitter MLB had already moved on from. The floor exists to make that gap visible:
-strong KBO numbers alone do not establish MLB viability, because the KBO contains
-players who have already demonstrated they can dominate it while failing to stick
-in the majors.
+Cameron posted a 64.9 wRC+ across 472 MLB plate appearances — not enough to hold a
+roster spot. He then hit 121.0 wRC+ across his KBO appearances. Elite production by
+KBO standards, from a hitter MLB had already moved on from. The floor exists to make
+that gap visible: strong KBO numbers alone do not establish MLB viability, because
+the KBO contains players who have already demonstrated they can dominate it while
+failing to stick in the majors.
 
 **An honest caveat:**
 This group is not uniformly composed of MLB washouts. Yasiel Puig (110 wRC+ in MLB)
