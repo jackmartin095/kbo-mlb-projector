@@ -236,7 +236,7 @@ elif page == PAGES[2]:
 
     # --- Header ---
     rank_val = int(player["Rank"])
-    pctile_val = float(player["Pctile"])
+    pctile_val = float(player["Percentile"])
 
     col1, col2, col3, col4 = st.columns(4)
     col1.metric("Rank", f"#{rank_val}")
