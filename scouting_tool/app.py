@@ -789,10 +789,38 @@ right now*, independent of career history.
 (Jung Hoo Lee, Ha-seong Kim, Hyeseong Kim, et al.). Represents what the best-case
 MLB outcome looks like statistically.
 
-**Floor** — average pre-KBO MLB stats of MLB veterans who moved to KBO
-(Yasiel Puig, Patrick Wisdom, et al.). Represents the minimum MLB baseline; a KBO
-player posting stats below this floor is performing at a level that even MLB players
-who washed out could match.
+**Floor** — average pre-KBO MLB stats of 23 MLB veterans who moved to KBO. Represents
+a reference point for the level of MLB production associated with players who ended up
+in the KBO.
+
+---
+
+### How the Floor Was Established
+
+The floor benchmark is the average pre-KBO MLB production of 23 MLB veterans who
+subsequently moved to play in the KBO — players like Daz Cameron, Aaron Altherr,
+Guillermo Heredia, and others. Their MLB stats were PA-weighted within each player's
+career, then averaged equally across all 23 players, giving a floor of **65.1 wRC+**.
+
+That number represents the level of MLB production that, in practice, did not sustain
+a major league career long enough to keep a player out of the KBO.
+
+**Why it matters — Daz Cameron as an example:**
+Cameron posted a 64.9 wRC+ across 472 MLB plate appearances — close-to-average
+offense at the major league level, not enough to hold a roster spot. He then hit
+121.0 wRC+ across his KBO appearances. Elite production by KBO standards, from a
+hitter MLB had already moved on from. The floor exists to make that gap visible:
+strong KBO numbers alone do not establish MLB viability, because the KBO contains
+players who have already demonstrated they can dominate it while failing to stick
+in the majors.
+
+**An honest caveat:**
+This group is not uniformly composed of MLB washouts. Yasiel Puig (110 wRC+ in MLB)
+and Patrick Wisdom (102 wRC+) were productive major league hitters who moved to the
+KBO for reasons other than performance — money, playing time, roster decisions. The
+floor is best read as "the average MLB outcome among players who ended up in the KBO,"
+not "the average failed MLB hitter." It is a directional benchmark, not a precise
+threshold, and should be interpreted accordingly.
 
 ---
 
