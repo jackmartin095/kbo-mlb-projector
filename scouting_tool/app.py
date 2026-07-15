@@ -638,10 +638,10 @@ the jump. Start with the Board for rankings, or read on for how the model works.
 
 ### Overview
 
-This model identifies KBO players most likely to succeed if posted to MLB, using
-four years of KBO batting data (2023–2026) sourced from FanGraphs. It produces a
-single **Adjusted Composite Score** per player that combines statistical quality,
-sample reliability, and age trajectory.
+This model identifies KBO players most likely to succeed if posted to MLB, using four
+years of KBO batting data (2023–2026) sourced from FanGraphs. It produces a single
+**Adjusted Composite Score** per player that combines statistical quality, sample
+reliability, and age trajectory.
 
 ---
 
@@ -649,9 +649,9 @@ sample reliability, and age trajectory.
 
 Raw data comes from the FanGraphs KBO International Leaderboard, exported separately
 as rate stats (wRC+, BB%, K%, ISO, Spd) and counting stats (HR, SB, H, R, RBI, etc.)
-then merged on Season + Player ID + Team. Traded players who appear as multiple split-season
-rows are deduplicated by keeping their highest-PA stint for rate stats, while PA is summed
-across all stints to preserve the true sample size.
+then merged on Season, Player ID, and Team. Traded players who appear as multiple
+split-season rows are deduplicated by keeping their highest-PA stint for rate stats,
+while PA is summed across all stints to preserve the true sample size.
 
 Players are tagged into three groups:
 - **KBO_only** — domestic KBO players who have not yet played in MLB
@@ -665,28 +665,20 @@ surname heuristic plus a manually maintained exclusion list.
 
 ### Step 2 — Career Aggregate
 
-For each KBO_only player, per-season stats are combined into a single career profile using
-**PA-weighted averaging** — each season contributes proportionally to how many plate
-appearances it represents. This closely mirrors how FanGraphs calculates multi-year
+For each KBO_only player, per-season stats are combined into a single career profile
+using **PA-weighted averaging**, so each season contributes proportionally to how many
+plate appearances it represents. This closely mirrors how FanGraphs calculates multi-year
 aggregate leaderboards, and avoids over-weighting small partial seasons.
 
-**Qualifying filters:** 200+ combined career PA · most recent season age ≤ 29
+**Qualifying filters:** 200+ combined career PA · most recent season age 29 or under
 
 #### Design note — why recency isn't in the composite
 
-The career aggregate deliberately treats all seasons equally on a per-plate-appearance
-basis rather than weighting recent seasons more heavily. This is a design choice, not
-an oversight. Blending recency into the composite would produce a single number that
-mixes two different signals — how good a player has been, and how good he is becoming —
-making it harder to tell which is driving a ranking.
-
-Instead, the model separates them. The main board answers "who has been reliably good,"
-using the full career sample. The Trend column answers "who is improving," by comparing
-recent performance against a player's own prior baseline. The Hot Right Now page answers
-"who is performing best today," using 2026 data alone. Each view is legible on its own,
-and a player who ranks low on the board but high on Trend or Hot is itself a meaningful
-scouting signal: current form has outrun the track record, and the question becomes
-whether it holds.
+The career aggregate treats all seasons equally on a per-plate-appearance basis rather
+than favouring recent ones. Recency is handled separately: the Trend column flags who's
+improving, and the Hot Right Now page shows current-season form. A player who ranks low
+on the board but high on either is a scouting signal in itself — current form outrunning
+the track record.
 
 ---
 
@@ -701,8 +693,8 @@ shrunk = pool_mean + (raw − pool_mean) × PA / (PA + 300)
 
 A player with 300 PA gets a 50/50 blend of their own numbers and the pool mean.
 A player with 1,500 PA is 83% their own numbers. This prevents small-sample outliers
-from dominating the rankings. Shrunk values are used only for scoring — raw stats are
-always displayed.
+from dominating the rankings. Shrunk values are used only for scoring, and raw stats
+are always displayed.
 
 ---
 
@@ -721,16 +713,16 @@ Five metrics are combined into a **composite score** using fixed weights:
 | wRC+   | 30%    | Higher = better |
 | BB%    | 25%    | Higher = better |
 | ISO    | 20%    | Higher = better |
-| K%     | 15%    | **Lower = better** (inverted) |
+| K%     | 15%    | Lower = better (inverted) |
 | Spd    | 10%    | Higher = better |
 
-**Why ISO is weighted at 20%:** MLB pitchers attack hitters who pose no extra-base threat,
-so power functions as something closer to a gating requirement than a bonus at the major
-league level. A contact-first KBO profile with minimal ISO carries more translation risk
-than its KBO production suggests. The weighting reflects that prior. (Note: within the
-small crossover sample used for the ceiling and floor benchmarks, ISO did not cleanly
-separate successful transitions from washouts — the weighting is based on reasoning about
-MLB pitching environments rather than on that limited evidence.)
+**Why ISO is weighted at 20%:** MLB pitchers attack hitters who pose no extra-base
+threat, so power functions as something closer to a gating requirement than a bonus
+at the major league level. A contact-first KBO profile with minimal ISO carries more
+translation risk than its KBO production suggests. The weighting reflects that prior.
+(Within the small crossover sample used for the ceiling and floor benchmarks, ISO did
+not cleanly separate successful transitions from washouts, so the weighting rests on
+reasoning about MLB pitching environments rather than on that limited evidence.)
 
 ---
 
@@ -739,13 +731,13 @@ MLB pitching environments rather than on that limited evidence.)
 The composite score is multiplied by an age factor that rewards younger players
 (more development runway) and discounts older ones:
 
-| Age   | Multiplier |
-|-------|-----------|
-| ≤ 20  | 1.25×     |
-| 21–22 | 1.15×     |
-| 23–24 | 1.05×     |
-| 25–27 | 1.00×     |
-| 28–29 | 0.90×     |
+| Age          | Multiplier |
+|--------------|-----------|
+| 20 and under | 1.25×     |
+| 21–22        | 1.15×     |
+| 23–24        | 1.05×     |
+| 25–27        | 1.00×     |
+| 28–29        | 0.90×     |
 
 The result is the **Adjusted Composite Score** used for final rankings.
 
@@ -762,8 +754,8 @@ Trend = most recent season composite − prior seasons' recency-weighted composi
 
 Prior seasons use 50/30/20 recency weights (redistributed for players with more than
 three seasons). Composite scores here use raw per-season z-scores against the full
-pool for that season, so the trend reflects genuine improvement or decline relative
-to peers, not just aging.
+pool for that season, so the trend reflects real improvement or decline relative to
+peers rather than just aging.
 
 Trajectory labels are assigned by percentile within the qualifying pool:
 - **↑↑ Rising** — top 20% of trend scores
@@ -786,119 +778,112 @@ right now*, independent of career history.
 ### Benchmarks — Ceiling and Floor
 
 The Player Deep-Dive page shows each player's wRC+ against two reference points drawn
-from real KBO crossover data: a ceiling (what successful KBO→MLB transitions looked like
-in MLB) and a floor (what MLB veterans who moved to KBO produced before making that move).
-Both are built using the same PA-weighted averaging method as the main model.
+from real KBO crossover data: a ceiling (what successful KBO→MLB transitions looked
+like in MLB) and a floor (what MLB veterans who moved to KBO produced before making
+that move). Both are built using the same PA-weighted averaging method as the main model.
 
 ---
 
 #### The Ceiling
 
-The ceiling is the average post-transition MLB production of 9 players who moved from
-the KBO to MLB: Shin-Soo Choo, Jung Hoo Lee, Ha-seong Kim, Hyun Soo Kim, Dae-Ho Lee,
-Hyeseong Kim, Byung-ho Park, Sung-Mun Song, and Jae-Gyun Hwang. Their MLB stats were
-PA-weighted within each player's career, then averaged equally across all 9 players,
-giving a ceiling of **86.1 wRC+** (BB% 8.9%, K% 22.7%, ISO .127).
-
-That number represents what a successful KBO→MLB transition has actually looked like
-in terms of MLB offensive production.
+The ceiling is the average post-transition MLB production of nine players who moved
+from the KBO to MLB: Shin-Soo Choo, Jung Hoo Lee, Ha-seong Kim, Hyun Soo Kim,
+Dae-Ho Lee, Hyeseong Kim, Byung-ho Park, Sung-Mun Song, and Jae-Gyun Hwang. Their
+MLB stats were PA-weighted within each player's career, then averaged equally across
+all nine players, giving a ceiling of **86.1 wRC+** (BB% 8.9%, K% 22.7%, ISO .127).
 
 **Why it matters — Jung Hoo Lee and Ha-seong Kim as examples:**
 Lee posted a 109.0 wRC+ across 1,036 MLB plate appearances (2024–2026), improving
 each season: 83 wRC+ in his first year, 107 in his second, 128 in his third. His KBO
-profile — elite contact, strong walk rate, low strikeout rate — translated cleanly,
-and the model ranked him top-3 in the backtest validation using only his final KBO season.
+profile of elite contact, a strong walk rate, and a low strikeout rate translated
+cleanly, and the model ranked him top-3 in the backtest validation using only his
+final KBO season.
 
 Ha-seong Kim provides a second data point with a larger sample. He posted a 103.0 wRC+
 across 1,706 MLB plate appearances (2021–2024), peaking at 118.2 wRC+ in 2023 before
-an injury-shortened 2024. Like Lee, his KBO profile centered on contact and discipline
+an injury-shortened 2024. Like Lee, his KBO profile centred on contact and discipline
 rather than raw power, and he established himself as a well-above-average MLB hitter
 across four seasons.
 
-**An honest caveat:**
-The sample is only 9 players, which limits precision considerably. Several transitions
-are recent enough that long-term outcomes aren't established — Sung-Mun Song has 48
-MLB plate appearances, Jae-Gyun Hwang just 57. Both are pulling the group average
-down significantly (25.8 and 54.4 wRC+ respectively). The ceiling is best read as a
-directional reference for what the KBO→MLB group has produced in MLB on average, not
-a precise prediction of what any individual player will achieve.
+**An honest caveat:** The sample is only nine players, which limits precision
+considerably. Several transitions are recent enough that long-term outcomes aren't
+established — Sung-Mun Song has 48 MLB plate appearances, Jae-Gyun Hwang just 57.
+Both are pulling the group average down significantly (54.4 and 25.8 wRC+ respectively).
+The ceiling is best read as a directional reference for what the KBO→MLB group has
+produced in MLB on average, not a precise prediction of what any individual player
+will achieve.
 
 ---
 
 #### The Floor
 
 The floor is the average pre-KBO MLB production of 23 MLB veterans who subsequently
-moved to play in the KBO — players like Daz Cameron, Aaron Altherr, Guillermo Heredia,
-and others. Their MLB stats were PA-weighted within each player's career, then averaged
+moved to play in the KBO — players like Daz Cameron, Aaron Altherr, and Guillermo
+Heredia. Their MLB stats were PA-weighted within each player's career, then averaged
 equally across all 23 players, giving a floor of **65.1 wRC+**.
 
 That number represents the level of MLB production that, in practice, did not sustain
 a major league career long enough to keep a player out of the KBO.
 
-**Why it matters — Daz Cameron as an example:**
-Cameron posted a 64.9 wRC+ across 472 MLB plate appearances — not enough to hold a
-roster spot. He then hit 121.0 wRC+ across his KBO appearances. Elite production by
-KBO standards, from a hitter MLB had already moved on from. The floor exists to make
-that gap visible: strong KBO numbers alone do not establish MLB viability, because
-the KBO contains players who have already demonstrated they can dominate it while
-failing to stick in the majors.
+**Why it matters — Daz Cameron as an example:** Cameron posted a 64.9 wRC+ across
+472 MLB plate appearances, not enough to hold a roster spot. He then hit 121.0 wRC+
+across his KBO appearances — elite production by KBO standards, from a hitter MLB had
+already moved on from. The floor exists to make that gap visible. Strong KBO numbers
+alone do not establish MLB viability, because the KBO contains players who have already
+shown they can dominate it while failing to stick in the majors.
 
-**An honest caveat:**
-This group is not uniformly composed of MLB washouts. Yasiel Puig (110 wRC+ in MLB)
-and Patrick Wisdom (102 wRC+) were productive major league hitters who moved to the
-KBO for reasons other than performance — money, playing time, roster decisions. The
-floor is best read as "the average MLB outcome among players who ended up in the KBO,"
-not "the average failed MLB hitter." It is a directional benchmark, not a precise
-threshold, and should be interpreted accordingly.
+**An honest caveat:** This group is not uniformly composed of MLB washouts. Yasiel
+Puig (110 wRC+ in MLB) and Patrick Wisdom (102 wRC+) were productive major league
+hitters who moved to the KBO for reasons other than performance — money, playing time,
+roster decisions. The floor is best read as "the average MLB outcome among players who
+ended up in the KBO," not "the average failed MLB hitter." It is a directional
+benchmark, not a precise threshold, and should be interpreted accordingly.
 
 ---
 
 ### Validation — Known KBO→MLB Transitions
 
 To test whether the model identifies the right players, two known successful KBO→MLB
-transitions were run through the same pipeline used for the main board — PA-weighted
+transitions were run through the same pipeline used for the main board: PA-weighted
 career aggregate, z-scored against the KBO_only qualifying pool, and ranked.
 
 **Note:** K=300 Marcel shrinkage and the age multiplier were removed for this exercise
 so the output reflects each player's raw statistical profile without model adjustments.
-This gives a cleaner read on whether the underlying stats were genuinely elite, separate
-from how the model penalizes small samples or rewards youth.
+This gives a cleaner read on whether the underlying stats were elite, separate from how
+the model penalizes small samples or rewards youth. Under the full model, with shrinkage
+and the age multiplier applied, both players still rank around the 93rd percentile.
 
 | Player | Seasons in Data | PA | Raw Composite | Hypothetical Rank | Percentile |
 |--------|----------------|-----|--------------|-------------------|------------|
 | Jung Hoo Lee 이정후 | 2023 only | 387 | +1.50 | **#3** | 97.4 |
 | Sung-Mun Song 송성문 | 2023–2025 | 1,686 | +1.12 | **#6** | 93.6 |
 
-**Jung Hoo Lee** — only his final KBO season (2023) is available in this dataset since
-he posted to MLB after that year. Despite the single-season limitation, his profile was
-top-3 material: elite contact (K% z: +2.70), strong walk rate (+1.68), and standout
-wRC+ (+2.02). The full model would have shrunk his score significantly toward the pool
-mean due to the small sample — this backtest removes that adjustment to show his true
-statistical footprint.
+**Jung Hoo Lee** — only his final KBO season (2023) is available in this dataset,
+since he posted to MLB after that year. Despite the single-season limitation, his
+profile was top-3 material, with elite contact (K% z: +2.70), a strong walk rate
+(+1.68), and a standout wRC+ (+2.02). The full model shrinks his score toward the
+pool mean because of the small sample, and this backtest removes that adjustment to
+show his raw statistical footprint.
 
-**Sung-Mun Song** — three full seasons available (2023–2025, 1,686 PA), giving a robust
-sample. His aggregate profile — wRC+ 129.3, BB% 10.1%, K% 12.8%, ISO .171 — scores in
-the top 6. The full model applies a 0.90× age discount (he was 28 in his final KBO season),
-which is removed here to show the underlying stat quality without the age penalty.
+**Sung-Mun Song** — three full seasons available (2023–2025, 1,686 PA), giving a
+robust sample. His aggregate profile of wRC+ 129.3, BB% 10.1%, K% 12.8%, and ISO
+.171 scores in the top 6. The full model applies a 0.90× age discount (he was 28 in
+his final KBO season), removed here to show the underlying stat quality without the
+age penalty.
 
-Both players would have ranked in the top 6 of the current qualifying pool on statistical
-merit alone, validating that the model's underlying signals meaningfully distinguish
-players who go on to succeed in MLB.
+Both players rank in the top 6 of the current qualifying pool on statistical merit alone.
 
 ---
 
 ### Limitations
 
-- **Rate averaging vs. pooled counting:** PA-weighted rate averaging is a close
-  approximation but not identical to recomputing rates from pooled counting totals.
-  Small gaps (typically < 5 wRC+ points) may exist vs. FanGraphs aggregate leaderboards.
-- **No position adjustment:** All players are evaluated purely on batting metrics.
-  Defensive value and positional scarcity are not modeled.
-- **No translation factor:** KBO stats are not run through a KBO-to-MLB translation
-  (park factors, league difficulty, etc.). The model ranks players relative to each
-  other within the KBO context, not against MLB baselines directly.
-- **Small crossover sample:** Only eight KBO→MLB transitions are used for the ceiling
-  benchmark, limiting its statistical precision.
+A few limits worth stating plainly. Players are evaluated on batting metrics only,
+with no adjustment for defense or position. KBO stats aren't run through a KBO-to-MLB
+translation, so the model ranks players against each other within the KBO context
+rather than against MLB baselines directly. The ceiling benchmark rests on only nine
+crossover players, which limits its precision. And PA-weighted rate averaging is a
+close approximation to pooled counting totals, not an exact match, so small gaps
+(under 5 wRC+ points) may exist versus FanGraphs aggregate leaderboards.
 """)
 
     st.divider()
