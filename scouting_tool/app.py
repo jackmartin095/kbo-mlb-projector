@@ -794,11 +794,11 @@ Both are built using the same PA-weighted averaging method as the main model.
 
 #### The Ceiling
 
-The ceiling is the average post-transition MLB production of 8 players who moved from
-the KBO to MLB: Shin-Soo Choo, Jung Hoo Lee, Hyun Soo Kim, Dae-Ho Lee, Hyeseong Kim,
-Byung-ho Park, Sung-Mun Song, and Jae-Gyun Hwang. Their MLB stats were PA-weighted
-within each player's career, then averaged equally across all 8 players, giving a
-ceiling of **84.0 wRC+** (BB% 8.9%, K% 22.9%, ISO .122).
+The ceiling is the average post-transition MLB production of 9 players who moved from
+the KBO to MLB: Shin-Soo Choo, Jung Hoo Lee, Ha-seong Kim, Hyun Soo Kim, Dae-Ho Lee,
+Hyeseong Kim, Byung-ho Park, Sung-Mun Song, and Jae-Gyun Hwang. Their MLB stats were
+PA-weighted within each player's career, then averaged equally across all 9 players,
+giving a ceiling of **86.1 wRC+** (BB% 8.9%, K% 22.7%, ISO .127).
 
 That number represents what a successful KBO→MLB transition has actually looked like
 in terms of MLB offensive production.
@@ -811,7 +811,7 @@ cleanly, and the model ranked him top-3 in the backtest validation using only hi
 final KBO season.
 
 **An honest caveat:**
-The sample is only 8 players, which limits precision considerably. Several transitions
+The sample is only 9 players, which limits precision considerably. Several transitions
 are recent enough that long-term outcomes aren't established — Sung-Mun Song has 48
 MLB plate appearances, Jae-Gyun Hwang just 57. Both are pulling the group average
 down significantly (25.8 and 54.4 wRC+ respectively). The ceiling is best read as a

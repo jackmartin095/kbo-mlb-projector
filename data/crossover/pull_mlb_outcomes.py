@@ -22,6 +22,7 @@ KEEP_COLS = ["Name", "Season", "Age", "PA", "wRC+", "BB%", "K%", "ISO", "Spd"]
 
 KBO_TO_MLB = [
     "Jung Hoo Lee",
+    "Ha-Seong Kim",
     "Hyeseong Kim",
     "Sung-Mun Song",
     "Byung-ho Park",
