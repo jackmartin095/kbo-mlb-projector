@@ -803,12 +803,17 @@ giving a ceiling of **86.1 wRC+** (BB% 8.9%, K% 22.7%, ISO .127).
 That number represents what a successful KBO→MLB transition has actually looked like
 in terms of MLB offensive production.
 
-**Why it matters — Jung Hoo Lee as an example:**
-Lee posted a 109.0 wRC+ across 1,036 MLB plate appearances (2024–2026), and has
-improved each season: 83 wRC+ in his first year, 107 in his second, 128 in his third.
-His KBO profile — elite contact, strong walk rate, low strikeout rate — translated
-cleanly, and the model ranked him top-3 in the backtest validation using only his
-final KBO season.
+**Why it matters — Jung Hoo Lee and Ha-seong Kim as examples:**
+Lee posted a 109.0 wRC+ across 1,036 MLB plate appearances (2024–2026), improving
+each season: 83 wRC+ in his first year, 107 in his second, 128 in his third. His KBO
+profile — elite contact, strong walk rate, low strikeout rate — translated cleanly,
+and the model ranked him top-3 in the backtest validation using only his final KBO season.
+
+Ha-seong Kim provides a second data point with a larger sample. He posted a 103.0 wRC+
+across 1,706 MLB plate appearances (2021–2024), peaking at 118.2 wRC+ in 2023 before
+an injury-shortened 2024. Like Lee, his KBO profile centered on contact and discipline
+rather than raw power, and he established himself as a well-above-average MLB hitter
+across four seasons.
 
 **An honest caveat:**
 The sample is only 9 players, which limits precision considerably. Several transitions
