@@ -488,9 +488,12 @@ elif page == PAGES[2]:
                 "MLB→KBO Floor":  st.column_config.TextColumn(width="medium"),
             },
         )
+        _dd_outcomes = pd.read_csv(MLB_OUTCOMES_FILE)
+        _dd_ceil_n  = int(_dd_outcomes[_dd_outcomes["group"] == "KBO_to_MLB"]["Name"].nunique())
+        _dd_floor_n = int(_dd_outcomes[_dd_outcomes["group"] == "MLB_to_KBO"]["Name"].nunique())
         st.caption(
-            "Ceiling = average MLB stats of the 8 KBO players who successfully transitioned. "
-            "Floor = average pre-KBO MLB stats of the 23 MLB veterans who moved to KBO."
+            f"Ceiling = average MLB stats of the {_dd_ceil_n} KBO players who successfully transitioned. "
+            f"Floor = average pre-KBO MLB stats of the {_dd_floor_n} MLB veterans who moved to KBO."
         )
 
 
