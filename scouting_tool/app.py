@@ -547,7 +547,7 @@ elif page == PAGES[3]:
             return f"▲ +{gap}"
         if gap <= -8:
             return f"▼ {gap}"
-        return f"+{gap}" if gap > 0 else str(gap)
+        return f"+{gap}" if gap > 0 else ("—" if gap == 0 else str(gap))
     filtered_hot["Gap"] = filtered_hot["Gap"].apply(_gap_label)
     filtered_hot["Board Rank"] = filtered_hot["Board Rank"].apply(
         lambda v: int(v) if pd.notna(v) else None
