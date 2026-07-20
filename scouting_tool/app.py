@@ -104,12 +104,13 @@ if page == PAGES[1]:
         "shrunk toward the pool mean for reliability, and adjusted upward for younger players "
         "with more development runway. Use the sidebar to filter by team, PA minimum, or age. "
         "Click a row and use **Open in Deep-Dive →** to view a full player profile. "
-        "Note: the composite weights plate discipline and contact heavily, so contact-first "
-        "profiles with limited power can rank well. Check the ISO column and the deep-dive "
-        "radar for a player's full shape."
+        "Note: the composite weights wRC+ and BB% most heavily, but ISO (power) sits at 20% — "
+        "above K% (15%). A contact-first profile with limited power can still rank well on "
+        "walk rate and wRC+, but check the ISO column and the deep-dive radar for a player's full shape."
     )
+    _base_pool = df[~df["Seasons"].isin(["2023 only", "2024 only"])]
     st.caption(
-        f"PA-weighted career aggregate (2023–2026) · K=300 Marcel shrinkage · Age ≤ 29 · {len(df)} qualifying players"
+        f"PA-weighted career aggregate (2023–2026) · K=300 Marcel shrinkage · Age ≤ 29 · {len(_base_pool)} qualifying players"
     )
     st.divider()
 
