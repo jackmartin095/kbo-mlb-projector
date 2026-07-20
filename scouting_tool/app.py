@@ -629,7 +629,21 @@ elif page == PAGES[0]:
     st.caption("How the KBO→MLB Projection Model works")
     st.divider()
 
-    st.markdown("""
+    _ceil  = mlb_benchmarks.get("KBO_to_MLB")
+    _floor = mlb_benchmarks.get("MLB_to_KBO")
+    _ceil_wrc = f"{_ceil['wRC+']:.1f}"    if _ceil  is not None else "—"
+    _ceil_bb  = f"{_ceil['BB%']*100:.1f}" if _ceil  is not None else "—"
+    _ceil_k   = f"{_ceil['K%']*100:.1f}"  if _ceil  is not None else "—"
+    _ceil_iso = f"{_ceil['ISO']:.3f}"     if _ceil  is not None else "—"
+    _floor_wrc = f"{_floor['wRC+']:.1f}"  if _floor is not None else "—"
+    _outcomes_raw = pd.read_csv(MLB_OUTCOMES_FILE)
+    _ceil_n  = int(_outcomes_raw[_outcomes_raw["group"] == "KBO_to_MLB"]["Name"].nunique())
+    _floor_n = int(_outcomes_raw[_outcomes_raw["group"] == "MLB_to_KBO"]["Name"].nunique())
+    _num_words = {7:"seven",8:"eight",9:"nine",10:"ten",23:"twenty-three",24:"twenty-four"}
+    _ceil_n_word  = _num_words.get(_ceil_n,  str(_ceil_n))
+    _floor_n_word = _num_words.get(_floor_n, str(_floor_n))
+
+    st.markdown(f"""
 A statistical scouting tool for identifying KBO hitters most likely to succeed in MLB.
 Built on four years of FanGraphs data, validated against the players who actually made
 the jump. Start with the Board for rankings, or read on for how the model works.
@@ -786,11 +800,11 @@ that move). Both are built using the same PA-weighted averaging method as the ma
 
 #### The Ceiling
 
-The ceiling is the average post-transition MLB production of nine players who moved
+The ceiling is the average post-transition MLB production of {_ceil_n_word} players who moved
 from the KBO to MLB: Shin-Soo Choo, Jung Hoo Lee, Ha-seong Kim, Hyun Soo Kim,
 Dae-Ho Lee, Hyeseong Kim, Byung-ho Park, Sung-Mun Song, and Jae-Gyun Hwang. Their
 MLB stats were PA-weighted within each player's career, then averaged equally across
-all nine players, giving a ceiling of **86.1 wRC+** (BB% 8.9%, K% 22.7%, ISO .127).
+all {_ceil_n_word} players, giving a ceiling of **{_ceil_wrc} wRC+** (BB% {_ceil_bb}%, K% {_ceil_k}%, ISO {_ceil_iso}).
 
 **Why it matters — Jung Hoo Lee and Ha-seong Kim as examples:**
 Lee posted a 109.0 wRC+ across 1,036 MLB plate appearances (2024–2026), improving
@@ -805,22 +819,14 @@ an injury-shortened 2024. Like Lee, his KBO profile centred on contact and disci
 rather than raw power, and he established himself as a well-above-average MLB hitter
 across four seasons.
 
-**An honest caveat:** The sample is only nine players, which limits precision
-considerably. Several transitions are recent enough that long-term outcomes aren't
-established — Sung-Mun Song has 48 MLB plate appearances, Jae-Gyun Hwang just 57.
-Both are pulling the group average down significantly (54.4 and 25.8 wRC+ respectively).
-The ceiling is best read as a directional reference for what the KBO→MLB group has
-produced in MLB on average, not a precise prediction of what any individual player
-will achieve.
-
 ---
 
 #### The Floor
 
-The floor is the average pre-KBO MLB production of 23 MLB veterans who subsequently
+The floor is the average pre-KBO MLB production of {_floor_n_word} MLB veterans who subsequently
 moved to play in the KBO — players like Daz Cameron, Aaron Altherr, and Guillermo
 Heredia. Their MLB stats were PA-weighted within each player's career, then averaged
-equally across all 23 players, giving a floor of **65.1 wRC+**.
+equally across all {_floor_n_word} players, giving a floor of **{_floor_wrc} wRC+**.
 
 That number represents the level of MLB production that, in practice, did not sustain
 a major league career long enough to keep a player out of the KBO.
@@ -831,13 +837,6 @@ across his KBO appearances — elite production by KBO standards, from a hitter 
 already moved on from. The floor exists to make that gap visible. Strong KBO numbers
 alone do not establish MLB viability, because the KBO contains players who have already
 shown they can dominate it while failing to stick in the majors.
-
-**An honest caveat:** This group is not uniformly composed of MLB washouts. Yasiel
-Puig (110 wRC+ in MLB) and Patrick Wisdom (102 wRC+) were productive major league
-hitters who moved to the KBO for reasons other than performance — money, playing time,
-roster decisions. The floor is best read as "the average MLB outcome among players who
-ended up in the KBO," not "the average failed MLB hitter." It is a directional
-benchmark, not a precise threshold, and should be interpreted accordingly.
 
 ---
 
@@ -880,7 +879,7 @@ Both players rank in the top 6 of the current qualifying pool on statistical mer
 A few limits worth stating plainly. Players are evaluated on batting metrics only,
 with no adjustment for defense or position. KBO stats aren't run through a KBO-to-MLB
 translation, so the model ranks players against each other within the KBO context
-rather than against MLB baselines directly. The ceiling benchmark rests on only nine
+rather than against MLB baselines directly. The ceiling benchmark rests on only {_ceil_n_word}
 crossover players, which limits its precision. And PA-weighted rate averaging is a
 close approximation to pooled counting totals, not an exact match, so small gaps
 (under 5 wRC+ points) may exist versus FanGraphs aggregate leaderboards.
