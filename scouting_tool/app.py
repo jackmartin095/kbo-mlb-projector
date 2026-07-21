@@ -520,6 +520,8 @@ elif page == PAGES[3]:
         hot_selected_teams = st.multiselect("Team", hot_teams, default=[])
         hot_min_pa = st.slider("Min 2026 PA", 100, 500, 100, step=25)
         hot_max_age = st.slider("Max Age", 20, 29, 29)
+        st.divider()
+        hot_sort_col = st.selectbox("Sort by", ["Score", "Gap"], index=0)
 
     # Build board rank lookup for Gap column
     board_rank_map = dict(zip(df["Name"], df["Rank"].astype(int)))
@@ -532,8 +534,9 @@ elif page == PAGES[3]:
     filtered_hot = filtered_hot.sort_values("Score", ascending=False).reset_index(drop=True)
     filtered_hot["Hot Rank"] = range(1, len(filtered_hot) + 1)
     filtered_hot["Board Rank"] = filtered_hot["Name"].map(board_rank_map)
+    # _gap_numeric computed before sort so Gap sort works correctly
     # Gap = Board Rank minus Hot Rank; large positive = performing well above career track record
-    filtered_hot["Gap"] = filtered_hot.apply(
+    filtered_hot["_gap_numeric"] = filtered_hot.apply(
         lambda r: int(r["Board Rank"] - r["Hot Rank"]) if pd.notna(r["Board Rank"]) else None,
         axis=1,
     )
@@ -548,10 +551,12 @@ elif page == PAGES[3]:
         if gap <= -8:
             return f"▼ {gap}"
         return f"+{gap}" if gap > 0 else ("—" if gap == 0 else str(gap))
-    filtered_hot["Gap"] = filtered_hot["Gap"].apply(_gap_label)
+    filtered_hot["Gap"] = filtered_hot["_gap_numeric"].apply(_gap_label)
     filtered_hot["Board Rank"] = filtered_hot["Board Rank"].apply(
         lambda v: int(v) if pd.notna(v) else None
     )
+    if hot_sort_col == "Gap":
+        filtered_hot = filtered_hot.sort_values("_gap_numeric", ascending=False, na_position="last").reset_index(drop=True)
 
     hot_display_cols = ["Hot Rank", "Name", "Team", "Age", "PA",
                         "wRC+", "BB%", "K%", "ISO", "Spd", "Score", "Board Rank", "Gap"]
