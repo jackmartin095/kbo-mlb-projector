@@ -534,29 +534,16 @@ elif page == PAGES[3]:
     filtered_hot = filtered_hot.sort_values("Score", ascending=False).reset_index(drop=True)
     filtered_hot["Hot Rank"] = range(1, len(filtered_hot) + 1)
     filtered_hot["Board Rank"] = filtered_hot["Name"].map(board_rank_map)
-    # _gap_numeric computed before sort so Gap sort works correctly
-    # Gap = Board Rank minus Hot Rank; large positive = performing well above career track record
-    filtered_hot["_gap_numeric"] = filtered_hot.apply(
+    # Gap = Board Rank minus Hot Rank; positive = hot form outrunning career rank
+    filtered_hot["Gap"] = filtered_hot.apply(
         lambda r: int(r["Board Rank"] - r["Hot Rank"]) if pd.notna(r["Board Rank"]) else None,
         axis=1,
     )
-    # Visual indicator for large gaps
-    def _gap_label(gap):
-        if gap is None or pd.isna(gap):
-            return "—"
-        if gap >= 20:
-            return f"▲▲ +{gap}"
-        if gap >= 8:
-            return f"▲ +{gap}"
-        if gap <= -8:
-            return f"▼ {gap}"
-        return f"+{gap}" if gap > 0 else ("—" if gap == 0 else str(gap))
-    filtered_hot["Gap"] = filtered_hot["_gap_numeric"].apply(_gap_label)
     filtered_hot["Board Rank"] = filtered_hot["Board Rank"].apply(
         lambda v: int(v) if pd.notna(v) else None
     )
     if hot_sort_col == "Gap":
-        filtered_hot = filtered_hot.sort_values("_gap_numeric", ascending=False, na_position="last").reset_index(drop=True)
+        filtered_hot = filtered_hot.sort_values("Gap", ascending=False, na_position="last").reset_index(drop=True)
 
     hot_display_cols = ["Hot Rank", "Name", "Team", "Age", "PA",
                         "wRC+", "BB%", "K%", "ISO", "Spd", "Score", "Board Rank", "Gap"]
@@ -580,15 +567,16 @@ elif page == PAGES[3]:
             width="medium",
         ),
         "Board Rank": st.column_config.NumberColumn("Board Rank", width="small"),
-        "Gap":        st.column_config.TextColumn(
-            "Gap ↑",
-            help="Board Rank minus Hot Rank. Large positive (▲▲) = performing well above career track record.",
+        "Gap":        st.column_config.NumberColumn(
+            "Gap",
+            format="%+d",
+            help="Board Rank minus Hot Rank. Positive = current form outrunning career track record.",
             width="small",
         ),
     }
 
     st.subheader(f"Hot Right Now — {len(filtered_hot)} players")
-    st.caption("**Gap** = Board Rank minus Hot Rank. ▲▲ = performing far above career projection; ▼ = cooling off relative to track record.")
+    st.caption("**Gap** = Board Rank minus Hot Rank. Positive = current form outrunning career projection; negative = cooling off relative to track record.")
 
     _hot_kwargs = dict(on_select="rerun", selection_mode="single-row") if _ST_SUPPORTS_SELECTION else {}
     hot_event = st.dataframe(
