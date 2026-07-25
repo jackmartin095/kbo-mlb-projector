@@ -73,7 +73,7 @@ def load_mlb_outcomes() -> dict:
 # Navigation
 # ---------------------------------------------------------------------------
 
-PAGES = ["📖 Methodology", "📋 The Board", "🔍 Player Deep-Dive", "🔥 Hot Right Now"]
+PAGES = ["📖 Methodology", "📋 The Board", "🔍 Player Deep-Dive", "🔥 Hot Right Now", "⚖️ Compare"]
 
 if "page" not in st.session_state:
     st.session_state["page"] = PAGES[0]  # Methodology is index 0 = landing page
@@ -884,3 +884,149 @@ close approximation to pooled counting totals, not an exact match, so small gaps
 
     st.divider()
     st.caption("Data: FanGraphs KBO Leaderboards · Model by Jack Martin")
+
+
+# ---------------------------------------------------------------------------
+# Page 5 — Compare
+# ---------------------------------------------------------------------------
+
+elif page == PAGES[4]:
+    st.title("⚖️ Compare Players")
+    st.markdown(
+        "Overlay up to four hitters on a single radar chart to compare their statistical shapes. "
+        "All axes use the same z-scores as the Deep-Dive page — scored against the full KBO-only "
+        "qualifying pool, with K% inverted so outward is better on every axis. "
+        "Select between two and four players; the chart stays readable up to four."
+    )
+    st.divider()
+
+    # Colours for up to four players — distinct, accessible
+    COMPARE_COLORS = [
+        ("rgba(0,116,217,0.9)",   "rgba(0,116,217,0.08)"),   # blue
+        ("rgba(255,65,54,0.9)",   "rgba(255,65,54,0.08)"),    # red
+        ("rgba(46,204,64,0.9)",   "rgba(46,204,64,0.08)"),    # green
+        ("rgba(177,13,201,0.9)",  "rgba(177,13,201,0.08)"),   # purple
+    ]
+
+    sorted_names = df.sort_values("Adj Score", ascending=False)["Name"].tolist()
+    defaults = sorted_names[:2]
+
+    selected = st.multiselect(
+        "Select players (2–4)",
+        options=sorted_names,
+        default=defaults,
+        max_selections=4,
+    )
+
+    if len(selected) < 2:
+        st.info("Select at least two players to render the chart.")
+        st.stop()
+
+    metric_labels = ["wRC+", "BB%", "K% (inv)", "ISO", "Spd"]
+    theta = metric_labels + [metric_labels[0]]
+    r_zero = [0] * len(theta)
+
+    fig = go.Figure()
+
+    # Pool average ring
+    fig.add_trace(go.Scatterpolar(
+        r=r_zero,
+        theta=theta,
+        mode="lines",
+        name="Pool avg",
+        line=dict(color="rgba(150,150,150,0.5)", width=1.5, dash="dot"),
+        hoverinfo="skip",
+    ))
+
+    table_rows = []
+    all_z = []
+
+    for i, name in enumerate(selected):
+        player = df[df["Name"] == name].iloc[0]
+        line_color, fill_color = COMPARE_COLORS[i]
+
+        z_values = [
+            float(player["z_wRC+"]),
+            float(player["z_BB%"]),
+            -float(player["z_K%"]),
+            float(player["z_ISO"]),
+            float(player["z_Spd"]),
+        ]
+        all_z.extend(z_values)
+
+        r_player = z_values + [z_values[0]]
+
+        fig.add_trace(go.Scatterpolar(
+            r=r_player,
+            theta=theta,
+            mode="lines+markers",
+            fill="toself",
+            fillcolor=fill_color,
+            name=name,
+            line=dict(color=line_color, width=2.5),
+            marker=dict(size=6, color=line_color),
+            hovertemplate="<b>%{theta}</b><br>Z-Score: %{r:+.2f}<extra></extra>",
+        ))
+
+        table_rows.append({
+            "Player":    name,
+            "wRC+":      round(float(player["wRC+"]), 1),
+            "BB%":       round(float(player["BB%"]), 1),
+            "K%":        round(float(player["K%"]), 1),
+            "ISO":       round(float(player["ISO"]), 3),
+            "Spd":       round(float(player["Spd"]), 1),
+            "Adj Score": round(float(player["Adj Score"]), 3),
+        })
+
+    axis_range = max(3.0, max(abs(v) for v in all_z) + 0.4)
+
+    fig.update_layout(
+        polar=dict(
+            radialaxis=dict(
+                visible=True,
+                range=[-axis_range, axis_range],
+                tickvals=[-2, -1, 0, 1, 2],
+                tickfont=dict(size=11),
+                gridcolor="rgba(180,180,180,0.3)",
+                linecolor="rgba(180,180,180,0.4)",
+            ),
+            angularaxis=dict(
+                tickfont=dict(size=13),
+                gridcolor="rgba(180,180,180,0.25)",
+                linecolor="rgba(180,180,180,0.4)",
+            ),
+            bgcolor="rgba(0,0,0,0)",
+        ),
+        showlegend=True,
+        legend=dict(orientation="h", yanchor="bottom", y=-0.15, x=0.5, xanchor="center"),
+        margin=dict(t=30, b=60, l=60, r=60),
+        height=480,
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(size=13),
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+    st.caption(
+        "All five axes z-scored against the full KBO-only pool aggregate. "
+        "K% is inverted so outward = better on every axis. "
+        "Dotted ring = pool average (z=0)."
+    )
+
+    st.divider()
+    st.subheader("Stat Comparison")
+    compare_df = pd.DataFrame(table_rows)
+    st.dataframe(
+        compare_df,
+        hide_index=True,
+        use_container_width=True,
+        column_config={
+            "Player":    st.column_config.TextColumn("Player",     width="medium"),
+            "wRC+":      st.column_config.NumberColumn("wRC+",     format="%.1f",  width="small"),
+            "BB%":       st.column_config.NumberColumn("BB%",      format="%.1f%%", width="small"),
+            "K%":        st.column_config.NumberColumn("K%",       format="%.1f%%", width="small"),
+            "ISO":       st.column_config.NumberColumn("ISO",      format="%.3f",  width="small"),
+            "Spd":       st.column_config.NumberColumn("Spd",      format="%.1f",  width="small"),
+            "Adj Score": st.column_config.NumberColumn("Adj Score", format="%.3f", width="small"),
+        },
+    )
