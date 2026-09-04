@@ -35,7 +35,22 @@
       "Bash(streamlit run *)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8501)",
       "Bash(lsof -ti:8502)",
-      "Bash(xargs kill -9)"
+      "Bash(xargs kill -9)",
+      "Bash(python -m py_compile scouting_tool/app.py)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(git pull *)",
+      "Bash(git stash *)",
+      "Bash(node scripts/validate_palette.js \"#2a78d6,#e0642a\" --mode light)",
+      "Bash(node scripts/validate_palette.js \"#2a78d6,#e0642a\" --mode dark --surface \"#1a1a19\")",
+      "Bash(node scripts/validate_palette.js \"#3987e5,#e2793d\" --mode dark --surface \"#1a1a19\")",
+      "Bash(cp \"/Users/jackmartin/Downloads/zo-hitter-data.json\" /private/tmp/claude-501/-Users-jackmartin-Desktop-kbo-mlb-projector/edd1ab4e-14b2-428e-926a-c90171ec7794/scratchpad/zo-hitter-data.json)",
+      "Bash(node /private/tmp/claude-501/-Users-jackmartin-Desktop-kbo-mlb-projector/edd1ab4e-14b2-428e-926a-c90171ec7794/scratchpad/check_stats.mjs)",
+      "Bash(cp \"/Users/jackmartin/Downloads/zo-hitter-data.json\" /Users/jackmartin/Desktop/kbo-mlb-projector/zo_stickiness_chart/zo-hitter-data.json *)",
+      "Bash(git -C /Users/jackmartin/Desktop/kbo-mlb-projector status --short)",
+      "Bash(git -C /Users/jackmartin/Desktop/kbo-mlb-projector show HEAD:.claude/launch.json)",
+      "Bash(git -C /Users/jackmartin/Desktop/kbo-mlb-projector checkout -- .claude/launch.json)"
     ]
   }
 }
